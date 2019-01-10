@@ -130,7 +130,7 @@ main <- function(){
     #..............
     # step4, write output bash script 
     #..............
-    fileConn <- file(paste0(opt$outputdir,"/", opt$masterbash, "_lumpysetup.sh"))
+    fileConn <- file(paste0(opt$masterbash, "_lumpysetup.sh"))
     writeLines(c("#!/usr/bin/env bash",
                paste(map$discordant), # map discordants
                paste(map$split),
@@ -227,7 +227,7 @@ main <- function(){
     #..............
     # step5, write output bash script 
     #..............
-    fileConn <- file(paste0(opt$outputdir,"/", opt$masterbash, "_lumpycall.sh"))
+    fileConn <- file(paste0(opt$masterbash, "_lumpycall.sh"))
     writeLines(c("#!/usr/bin/env bash",
                  "lumpy \\",
                  "-mw 4 \\", 
