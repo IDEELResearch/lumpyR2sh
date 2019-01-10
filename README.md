@@ -1,4 +1,11 @@
 # lumpyR2sh
+
+## Installation
+git clone <https://github.com/IDEELResearch/lumpyR2sh.git>   
+OR  
+If you are on the longleaf server, the function is execeutable by:     
+`proj/ideel/bin/lumpyR2shpkg/lumpyR2sh`
+
 ## Purpose
 This is an execuetable R file (intended to run from the command line) that takes a directory of bams and outputs two different bash wrapper scripts (`_lumpysetup.sh` and `_lumpycall.sh`) corresponding to the [lumpy-sv](https://github.com/arq5x/lumpy-sv) pipeline. 
 
