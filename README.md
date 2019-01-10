@@ -33,13 +33,13 @@ Both master bash script will expect that samtools, scripts/extractSplitReads_Bwa
 ## Example
 
 > `# step 1`  
-Rscript lumpyR2sh -A lumpysetup -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75  
+> Rscript lumpyR2sh -A lumpysetup -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75  
 >  
->bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpysetup.sh
+> bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpysetup.sh
 >  
 > `# step 2`
 >  
-Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
+> Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
 >   
->bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
+> bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
 >
