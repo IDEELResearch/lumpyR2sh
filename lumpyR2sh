@@ -294,8 +294,8 @@ main <- function(){
     writeLines(c("#!/usr/bin/env bash",
                  "svtyper \\",
                  paste0("-B ", paste0(map$paths, collapse = ","), " \\"), # bam lines
-                 paste0("-l ", paste0(map$bamlibjson, collapse = ","), " \\"), # json lines
-                 #          paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines, now depreciated
+      #          paste0("-l ", paste0(map$bamlibjson, collapse = ","), " \\"), # json lines
+      #          paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines, now depreciated
                  "-i sample.lumpy.vcf \\",
                  "-o sample.lumpy.svtyper.vcf"
     ), fileConn) #close
