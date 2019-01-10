@@ -22,3 +22,17 @@ From the command line, you would run the script as follows:
 
 ### Details
 Both master bash script will expect that samtools, scripts/extractSplitReads_BwaMem, scripts/pairend_distro.py (from lumpy) and lumpy are execuetable from your environment. 
+
+## Example
+
+> `# step 1`  
+Rscript lumpyR2sh -A lumpysetup -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75  
+>  
+>bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpysetup.sh
+>  
+> `# step 2`
+>  
+Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
+>   
+>bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
+>
