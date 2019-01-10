@@ -28,9 +28,9 @@ option_list=list(
               type = "character", 
               default = NULL, 
               help = paste( "The absolute path for the directory that contains bams. Note: the script will",
-                           "read all of the files in the given directory and create a bash script", 
+                            "read all of the files in the given directory and create a bash script", 
                             "that will run traditional lumpy on each bam (file) in the directory. Expects",
-                           "bams to have been aligned with bwa-mem, per lumpy guidelines"), 
+                            "bams to have been aligned with bwa-mem, per lumpy guidelines"), 
               metavar = "character"),
   make_option(c("-O", "--outputdir"), 
               type = "character", 
@@ -77,9 +77,9 @@ if(is.null(opt$masterbash)){
 
 main <- function(){  
   if(opt$action == "lumpysetup"){
-  ###################################
-  #  Call LUMPY SETUP
-  ###################################
+    ###################################
+    #  Call LUMPY SETUP
+    ###################################
     #..............
     # step1, readin bams
     #..............
@@ -110,7 +110,7 @@ main <- function(){
     
     map$discordant <- paste("samtools view -b -F 1294", map$paths, " | samtools sort - >", #input
                             paste0(opt$outputdir, "/", map$names, ".discordants.sorted.bam") #output
-                            )
+    )
     map$split <- paste("samtools view -h", map$paths, " | extractSplitReads_BwaMem -i stdin | samtools view -Sb - | samtools sort - >", 
                        paste0(opt$outputdir, "/", map$names, ".splitters.sorted.bam"))
     
@@ -125,29 +125,29 @@ main <- function(){
     # -N 10000 \
     # -o sample.lib1.histo
     map$pairend_distro <- paste("samtools view", map$paths, " | tail -n+100000 | pairend_distro.py -r", opt$read_size, "-X 4 -N 10000", #input 
-                       "-o", paste0(opt$outputdir, "/", map$names, ".pairend_distro.histo"), #output hist
-                       ">",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.summ"), #output mean and stddev
-                       "2>",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.outliers") #output outliers
-                       )
+                                "-o", paste0(opt$outputdir, "/", map$names, ".pairend_distro.histo"), #output hist
+                                ">",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.summ"), #output mean and stddev
+                                "2>",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.outliers") #output outliers
+    )
     #..............
     # step4, write output bash script 
     #..............
     
     fileConn <- file(paste0(opt$masterbash, "_lumpysetup.sh"))
     writeLines(c("#!/usr/bin/env bash",
-               paste(map$discordant), # map discordants
-               paste(map$split),
-               paste(map$pairend_distro)
-               ), fileConn) # map pairedend_distro
+                 paste(map$discordant), # map discordants
+                 paste(map$split),
+                 paste(map$pairend_distro)
+    ), fileConn) # map pairedend_distro
     close(fileConn)
-
-  
+    
+    
     
     
   } else if(opt$action == "lumpycall"){
-  ###################################
-  #  Call Lumpy
-  ###################################
+    ###################################
+    #  Call Lumpy
+    ###################################
     #..............
     # step1, readin
     #..............
@@ -208,13 +208,13 @@ main <- function(){
     pe <- tibble::tibble( # paired end
       pe = rep("-pe ", length(map$paths)),
       command = paste0("id:", map$names, ",",
-                 "bam_file:", map$paths, ",", # input bam
-                 "histo_file:", map$histos, ",", # input histo
-                 "mean:", map$mean, ",", # mean
-                 "stdev:", map$stdev, ",", #stdev
-                 "read_length:", opt$read_size, ",", # read size
-                 "min_non_overlap:",  opt$read_size, ",", # default
-                 "discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:20" # default
+                       "bam_file:", map$paths, ",", # input bam
+                       "histo_file:", map$histos, ",", # input histo
+                       "mean:", map$mean, ",", # mean
+                       "stdev:", map$stdev, ",", #stdev
+                       "read_length:", opt$read_size, ",", # read size
+                       "min_non_overlap:",  opt$read_size, ",", # default
+                       "discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:20" # default
       ),
       end = rep(" \\", length(map$paths))
     )
@@ -283,14 +283,21 @@ main <- function(){
     map <- dplyr::left_join(map, splitters, by = "names")
     
     #..............
-    # step5, write output bash script 
+    # step3, write out potential json libraries of stats (doesn't look like svtyper needs this but to be careful)
+    #..............
+    map$bamlibjson <- paste0(opt$outputdir, "/", map$names, ".bam.json")
+    
+    #..............
+    # step4, write output bash script 
     #..............
     fileConn <- file(paste0(opt$masterbash, "_svtypercall.sh"))
     writeLines(c("#!/usr/bin/env bash",
                  "svtyper \\",
                  paste0("-B ", paste0(map$paths, collapse = ","), " \\"), # bam lines
-                 paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines
-                 "-i sample.lumpy.vcf > sample.lumpy.svtyper.vcf"
+                 paste0("-l ", paste0(map$bamlibjson, collapse = ","), " \\"), # json lines
+                 #          paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines, now depreciated
+                 "-i sample.lumpy.vcf \\",
+                 "-o sample.lumpy.svtyper.vcf"
     ), fileConn) #close
     close(fileConn)
     
@@ -305,11 +312,11 @@ main <- function(){
 } # end function
 
 main() # call main
-  
-  
-  
-      
-    
-    
+
+
+
+
+
+
 
 
