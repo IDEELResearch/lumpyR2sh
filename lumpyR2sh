@@ -1,0 +1,257 @@
+#!/usr/bin/env Rscript 
+
+# NFB
+
+#..............
+# dependencies
+#..............
+dpdncs <- c("tidyverse", "optparse", "stringr")
+if(! all( dpdncs %in% rownames(installed.packages()) ) ){
+  install.packages(dpdncs[ !(dpdncs %in% rownames(installed.packages())) ])
+  
+}
+quiet <- suppressPackageStartupMessages(lapply(dpdncs, require, character.only = TRUE))
+
+#..............
+# command line imports
+#..............
+option_list=list(
+  make_option(c("-A", "--action"), 
+              type = "character", 
+              default = NULL, 
+              help = paste("Action for this tool. Choice is either lumpysetup or lumpycall. Note: lumpysetup", 
+                           "(and subsequent master bash script) must be ran prior to lumpycall."), 
+              metavar = "character"),
+  make_option(c("-I", "--inputdir"), 
+              type = "character", 
+              default = NULL, 
+              help = paste( "The absolute path for the directory that contains bams. Note: the script will",
+                           "read all of the files in the given directory and create a bash script", 
+                            "that will run traditional lumpy on each bam (file) in the directory. Expects",
+                           "bams to have been aligned with bwa-mem, per lumpy guidelines"), 
+              metavar = "character"),
+  make_option(c("-O", "--outputdir"), 
+              type = "character", 
+              default = NULL, 
+              help = paste("Output directory (absolute) path. Note: this will be the directory that the",
+                           "bash script will write to for the output of the traditional lumpy run.",
+                           "In addition, the directory is assumed to be existing at time of run."), 
+              metavar = "character"),
+  make_option(c("-M", "--masterbash"), 
+              type = "character",
+              default = NULL,
+              help = paste("This is the master bash script that will run the traditional lumpy pipeline (see lumpy github for details).",
+                           "It will be placed in your output directory."), 
+              metavar = "character"),
+  make_option(c("-R", "--read_size"), 
+              type = "character",
+              default = 150,
+              help = paste("This is the read size from your fastq for pairend_distro.py."), 
+              metavar = "numeric")
+)
+
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+if(is.null(opt$action)){
+  print_help(opt_parser)
+  stop("Missing action argument", call. = FALSE)
+}
+
+if(is.null(opt$inputdir)){
+  print_help(opt_parser)
+  stop("Missing input dir argument", call. = FALSE)
+}
+
+if(is.null(opt$outputdir)){
+  print_help(opt_parser)
+  stop("Missing output directory argument", call. = FALSE)
+}
+
+if(is.null(opt$masterbash)){
+  print_help(opt_parser)
+  stop("Missing output master bash file arguement argument", call. = FALSE)
+}
+
+main <- function(){  
+  if(opt$action == "lumpysetup"){
+  ###################################
+  #  Call LUMP SETUP
+  ###################################
+    #..............
+    # step1, readin
+    #..............
+    
+    # get internal map for sample names and sample input path
+    map <- tibble::tibble(
+      names = gsub(".bam", "", list.files(path=opt$inputdir, full.names = F)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] ), # read paths, get rid of bai files and then sub out .bam for sample name 
+      paths = list.files(path=opt$inputdir, full.names = T)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] # file paths excluding bai files
+    )
+    
+    # check to make sure no replicate bam sample names
+    if(any(duplicated(map$names))){
+      stop("You have bam files with duplicated sample names. This function expects a single bam per sample id (basename)")
+    }
+    
+    #..............
+    # step2, samtools 
+    #..............
+    
+    # Extract the discordant paired-end alignments.
+    # samtools view -b -F 1294 sample.bam | samtools sort - > sample.discordants.sorted.bam
+    
+    # Extract the split-read alignments
+    # samtools view -h sample.bam \
+    # | extractSplitReads_BwaMem -i stdin \
+    # | samtools view -Sb - | samtools sort - \
+    # > sample.splitters.sorted.bam
+    
+    map$discordant <- paste("samtools view -b -F 1294", map$paths, " | samtools sort - >", #input
+                            paste0(opt$outputdir, "/", map$names, ".discordants.sorted.bam") #output
+                            )
+    map$split <- paste("samtools view -h", map$paths, " | extractSplitReads_BwaMem -i stdin | samtools view -Sb - | samtools sort - >", 
+                       paste0(opt$outputdir, "/", map$names, ".splitters.sorted.bam"))
+    
+    #..............
+    # step3, pairend_distro 
+    #..............
+    # samtools view -r readgroup1 sample.bam \
+    # | tail -n+100000 \
+    # | scripts/pairend_distro.py \
+    # -r 101 \
+    # -X 4 \
+    # -N 10000 \
+    # -o sample.lib1.histo
+    map$pairend_distro <- paste("samtools view", map$paths, " | tail -n+100000 | pairend_distro.py -r", opt$read_size, "-X 4 -N 10000", #input 
+                       "-o", paste0(opt$outputdir, "/", map$names, ".pairend_distro.histo"), #output hist
+                       ">",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.summ"), #output mean and stddev
+                       "2>",  paste0(opt$outputdir, "/", map$names, ".pairend_distro.outliers") #output outliers
+                       )
+    #..............
+    # step4, write output bash script 
+    #..............
+    fileConn <- file(paste0(opt$outputdir,"/", opt$masterbash, "_lumpysetup.sh"))
+    writeLines(c("#!/usr/bin/env bash",
+               paste(map$discordant), # map discordants
+               paste(map$split),
+               paste(map$pairend_distro)
+               ), fileConn) # map pairedend_distro
+    close(fileConn)
+
+  
+    
+    
+  } else if(opt$action == "lumpycall"){
+  ###################################
+  #  Call Lumpy
+  ###################################
+    #..............
+    # step1, readin
+    #..............
+    
+    # get internal map for sample names and sample input path
+    map <- tibble::tibble(
+      names = gsub(".bam", "", list.files(path=opt$inputdir, full.names = F)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] ), # read paths, get rid of bai files and then sub out .bam for sample name 
+      paths = list.files(path=opt$inputdir, full.names = T)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] # file paths excluding bai files
+    )
+    
+    # check to make sure no replicate bam sample names
+    if(any(duplicated(map$names))){
+      stop("You have bam files with duplicated sample names. This function expects a single bam per sample id (basename)")
+    }
+    
+    #..............
+    # step2, read in mean and stddev from pairend_distro 
+    #..............
+    pairend_distro_summ <- list.files(path = opt$outputdir, pattern = "pairend_distro.summ", full.names = T)
+    read_pairend_distro_summ <- function(path){
+      temp <- readr::read_tsv(file = path, col_names = F)
+      
+      ret <- tibble::tibble(
+        mean = as.numeric(stringr::str_split_fixed(string = temp[1,1], pattern = "mean:", n = 2)[,2]),
+        stdev = as.numeric(stringr::str_split_fixed(string = temp[1,2], pattern = "stdev:", n = 2)[,2])
+      )
+      return(ret)
+    }
+    
+    pairend_distro_out <- lapply(pairend_distro_summ, read_pairend_distro_summ) %>% dplyr::bind_rows()
+    map <- dplyr::bind_cols(map, pairend_distro_out)
+    
+    #..............
+    # step3, find splitters 
+    #..............
+    splitters <- tibble::tibble(
+      names = gsub(".splitters.sorted.bam", "", list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = F)), 
+      splitters = list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = T)
+    )
+    map <- dplyr::left_join(map, splitters, by = "names")
+    #..............
+    # step4, make lumpy commands
+    #..............
+    
+    # lumpy \
+    # -mw 4 \
+    # -tt 0 \
+    # -pe id:sample,read_group:rg1,bam_file:sample.discordants.bam,histo_file:sample.lib1.histo,mean:500,stdev:50,read_length:101,min_non_overlap:101,discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:20 \
+    # -pe id:sample,read_group:rg2,bam_file:sample.discordants.bam,histo_file:sample.lib2.histo,mean:500,stdev:50,read_length:101,min_non_overlap:101,discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:20 \
+    # -sr id:sample,bam_file:sample.splitters.bam,back_distance:10,weight:1,min_mapping_threshold:20 \
+    # > sample.vcf
+    
+    pe <- tibble::tibble( # paired end
+      pe = rep("-pe ", length(map$paths)),
+      command = paste0("id:", map$names, ",",
+                 "bam_file:", opt$outputdir, map$paths, ",", # input bam
+                 "mean:", map$mean, ",", # mean
+                 "stdev:", map$stdev, ",", #stdev
+                 "read_length:", opt$read_size, ",", # read size
+                 "min_non_overlap:",  opt$read_size, ",", # default
+                 "discordant_z:5,back_distance:10,weight:1,min_mapping_threshold:20" # default
+      ),
+      end = rep(" \\", length(map$paths))
+    )
+    
+    sr <- tibble::tibble(
+      sr = rep("-sr ", length(map$paths)),
+      command = paste0("id:", map$names, ",",
+                       "bam_file:", opt$outputdir, map$splitters, ",", # input bam
+                       "dback_distance:10,weight:1,min_mapping_threshold:20" # default
+      ),
+      end = rep(" \\", length(map$paths))
+    )
+    
+    
+    
+    
+    
+    
+    #..............
+    # step5, write output bash script 
+    #..............
+    fileConn <- file(paste0(opt$outputdir,"/", opt$masterbash, "_lumpycall.sh"))
+    writeLines(c("#!/usr/bin/env bash",
+                 "lumpy \\",
+                 "-mw 4 \\", 
+                 "-tt 0 \\",
+                 paste0(pe$pe, pe$command, pe$end), # pe lines
+                 paste0(sr$sr, sr$command, sr$end), # sr lines
+                 "> sample.lumpy.vcf"
+    ), fileConn) #close
+    close(fileConn)
+    
+    
+  } else {
+    stop("The action argument you specified is not supported. Choose either lumpysetup or lumpy")
+    
+    
+  } #end ifelse 
+} # end function
+
+main()
+  
+  
+  
+      
+    
+    
+
+
