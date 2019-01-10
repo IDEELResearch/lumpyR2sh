@@ -166,7 +166,7 @@ main <- function(){
     #..............
     pairend_distro_summ <- list.files(path = opt$outputdir, pattern = "pairend_distro.summ", full.names = T)
     read_pairend_distro_summ <- function(path){
-      temp <- readr::read_tsv(file = path, col_names = F)
+      temp <- suppressMessages(readr::read_tsv(file = path, col_names = F))
       
       ret <- tibble::tibble(
         mean = as.numeric(stringr::str_split_fixed(string = temp[1,1], pattern = "mean:", n = 2)[,2]),
