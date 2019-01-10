@@ -206,8 +206,8 @@ main <- function(){
     pe <- tibble::tibble( # paired end
       pe = rep("-pe ", length(map$paths)),
       command = paste0("id:", map$names, ",",
-                 "bam_file:", opt$outputdir, map$paths, ",", # input bam
-                 "histo_file:",  opt$outputdir, map$histos, ",", # input histo
+                 "bam_file:", map$paths, ",", # input bam
+                 "histo_file:", map$histos, ",", # input histo
                  "mean:", map$mean, ",", # mean
                  "stdev:", map$stdev, ",", #stdev
                  "read_length:", opt$read_size, ",", # read size
@@ -220,7 +220,7 @@ main <- function(){
     sr <- tibble::tibble(
       sr = rep("-sr ", length(map$paths)),
       command = paste0("id:", map$names, ",",
-                       "bam_file:", opt$outputdir, map$splitters, ",", # input bam
+                       "bam_file:", map$splitters, ",", # input bam
                        "back_distance:10,weight:1,min_mapping_threshold:20" # default
       ),
       end = rep(" \\", length(map$paths))
