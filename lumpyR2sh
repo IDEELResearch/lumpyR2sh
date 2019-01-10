@@ -248,7 +248,7 @@ main <- function(){
     close(fileConn)
     
     
-  } else if(opt$action == "svtyper"){
+  } else if(opt$action == "svtypercall"){
     ###################################
     #  Call svtyper
     ###################################
