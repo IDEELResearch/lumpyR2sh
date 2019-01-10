@@ -290,8 +290,7 @@ main <- function(){
                  "svtyper \\",
                  paste0("-B ", paste0(map$paths, collapse = ","), " \\"), # bam lines
                  paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines
-                 "-i sample.lumpy.vcf",
-                 "> sample.lumpy.svtyper.vcf"
+                 "-i sample.lumpy.vcf > sample.lumpy.svtyper.vcf"
     ), fileConn) #close
     close(fileConn)
     
