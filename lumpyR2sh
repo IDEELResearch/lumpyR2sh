@@ -19,8 +19,10 @@ option_list=list(
   make_option(c("-A", "--action"), 
               type = "character", 
               default = NULL, 
-              help = paste("Action for this tool. Choice is either lumpysetup or lumpycall. Note: lumpysetup", 
-                           "(and subsequent master bash script) must be ran prior to lumpycall."), 
+              help = paste("Action for this tool. Choice is either lumpysetup, lumpycall, svtypercall. Note: lumpysetup", 
+                           "(and subsequent master bash script) must be ran prior to lumpycall.",
+                           "Similarly, lumpycall", 
+                           "(and subsequent master bash script) must be ran prior to svtypercall."), 
               metavar = "character"),
   make_option(c("-I", "--inputdir"), 
               type = "character", 
@@ -76,10 +78,10 @@ if(is.null(opt$masterbash)){
 main <- function(){  
   if(opt$action == "lumpysetup"){
   ###################################
-  #  Call LUMP SETUP
+  #  Call LUMPY SETUP
   ###################################
     #..............
-    # step1, readin
+    # step1, readin bams
     #..............
     
     # get internal map for sample names and sample input path
@@ -246,8 +248,58 @@ main <- function(){
     close(fileConn)
     
     
-  } else {
-    stop("The action argument you specified is not supported. Choose either lumpysetup or lumpy")
+  } else if(opt$action == "svtyper"){
+    ###################################
+    #  Call svtyper
+    ###################################
+    # svtyper \      
+    # -B sample.bam \
+    # -S sample.splitters.bam \
+    # -i sample.vcf
+    # > sample.gt.vcf
+    
+    #..............
+    # step1, readin bams
+    #..............
+    
+    # get internal map for sample names and sample input path
+    map <- tibble::tibble(
+      names = gsub(".bam", "", list.files(path=opt$inputdir, full.names = F)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] ), # read paths, get rid of bai files and then sub out .bam for sample name 
+      paths = list.files(path=opt$inputdir, full.names = T)[!grepl("bai", list.files(path=opt$inputdir, full.names = F))] # file paths excluding bai files
+    )
+    
+    # check to make sure no replicate bam sample names
+    if(any(duplicated(map$names))){
+      stop("You have bam files with duplicated sample names. This function expects a single bam per sample id (basename)")
+    }
+    
+    #..............
+    # step2, find splitters
+    #..............
+    splitters <- tibble::tibble(
+      names = gsub(".splitters.sorted.bam", "", list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = F)), 
+      splitters = list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = T)
+    )
+    map <- dplyr::left_join(map, splitters, by = "names")
+    
+    #..............
+    # step5, write output bash script 
+    #..............
+    fileConn <- file(paste0(opt$masterbash, "_svtypercall.sh"))
+    writeLines(c("#!/usr/bin/env bash",
+                 "svtyper \\",
+                 paste0("-B ", paste0(map$paths, collapse = ",")), # bam lines
+                 paste0("-S ", paste0(map$splitters, collapse = ",")), # splitter lines
+                 "-i sample.lumpy.vcf",
+                 "> sample.lumpy.svtyper.vcf"
+    ), fileConn) #close
+    close(fileConn)
+    
+    
+    
+    
+  }else {
+    stop("The action argument you specified is not supported. Choose either lumpysetup, lumpycall, or svtypercall")
     
     
   } #end ifelse 

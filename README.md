@@ -25,10 +25,19 @@ From the command line, you would run the script as follows:
 
 **Note: you must run the bash script to generate the files.** 
 
+### SVTyper Call
+This is the post-processing option provided by [`SVTyper`](https://github.com/hall-lab/svtyper) and recommended by `lumpy`. 
+
+From the command line, you would run the script as follows:   
+
+> Rscript lumpyR2sh -A svtypercall -I \<path\_input\_dir\> -O \<path\_output\_dir\> -M \<name\_master\_bash\> -R \<library\_read\_size\>
+
+**Note: you must run the bash script to generate the files.** 
+
 
 
 ### Details
-Both master bash script will expect that samtools, scripts/extractSplitReads_BwaMem, scripts/pairend_distro.py (from lumpy) and lumpy are execuetable from your environment. 
+Both master bash script will expect that `samtools`, `extractSplitReads_BwaMem` (from `lumpy`), `pairend_distro.py` (from `lumpy`), `lumpy`, and `SVTyper` are execuetable from your environment. 
 
 ## Example
 
@@ -42,4 +51,9 @@ Both master bash script will expect that samtools, scripts/extractSplitReads_Bwa
 > Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
 >   
 > bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
->
+>  
+> `# step 3`
+>  
+> Rscript lumpyR2sh -A svtypercall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
+>   
+> bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_svtypercall.sh
