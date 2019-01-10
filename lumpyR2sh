@@ -198,10 +198,11 @@ main <- function(){
     # -sr id:sample,bam_file:sample.splitters.bam,back_distance:10,weight:1,min_mapping_threshold:20 \
     # > sample.vcf
     
-    pe <- tibble::tibble( # paired end
+     pe <- tibble::tibble( # paired end
       pe = rep("-pe ", length(map$paths)),
       command = paste0("id:", map$names, ",",
                  "bam_file:", opt$outputdir, map$paths, ",", # input bam
+                 "histo_file:",  opt$outputdir, map$histos, ",", # input histo
                  "mean:", map$mean, ",", # mean
                  "stdev:", map$stdev, ",", #stdev
                  "read_length:", opt$read_size, ",", # read size
