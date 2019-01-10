@@ -288,8 +288,8 @@ main <- function(){
     fileConn <- file(paste0(opt$masterbash, "_svtypercall.sh"))
     writeLines(c("#!/usr/bin/env bash",
                  "svtyper \\",
-                 paste0("-B ", paste0(map$paths, collapse = ",")), # bam lines
-                 paste0("-S ", paste0(map$splitters, collapse = ",")), # splitter lines
+                 paste0("-B ", paste0(map$paths, collapse = ","), " \\"), # bam lines
+                 paste0("-S ", paste0(map$splitters, collapse = ","), " \\"), # splitter lines
                  "-i sample.lumpy.vcf",
                  "> sample.lumpy.svtyper.vcf"
     ), fileConn) #close
