@@ -179,13 +179,18 @@ main <- function(){
     map <- dplyr::bind_cols(map, pairend_distro_out)
     
     #..............
-    # step3, find splitters 
+    # step3, find splitters and histos
     #..............
     splitters <- tibble::tibble(
       names = gsub(".splitters.sorted.bam", "", list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = F)), 
       splitters = list.files(path = opt$outputdir, pattern = ".splitters.sorted.bam", full.names = T)
     )
-    map <- dplyr::left_join(map, splitters, by = "names")
+    histos <- tibble::tibble(
+      names = gsub(".pairend_distro.histo", "", list.files(path = opt$outputdir, pattern = ".pairend_distro.histo", full.names = F)), 
+      histos = list.files(path = opt$outputdir, pattern = ".pairend_distro.histo", full.names = T)
+    )
+    map <- dplyr::left_join(map, splitters, by = "names") %>% 
+      dplyr::left_join(x=., y=histos, by = "names")
     #..............
     # step4, make lumpy commands
     #..............
@@ -198,7 +203,7 @@ main <- function(){
     # -sr id:sample,bam_file:sample.splitters.bam,back_distance:10,weight:1,min_mapping_threshold:20 \
     # > sample.vcf
     
-     pe <- tibble::tibble( # paired end
+    pe <- tibble::tibble( # paired end
       pe = rep("-pe ", length(map$paths)),
       command = paste0("id:", map$names, ",",
                  "bam_file:", opt$outputdir, map$paths, ",", # input bam
@@ -216,7 +221,7 @@ main <- function(){
       sr = rep("-sr ", length(map$paths)),
       command = paste0("id:", map$names, ",",
                        "bam_file:", opt$outputdir, map$splitters, ",", # input bam
-                       "back_distance:10,weight:1,min_mapping_threshold:20" # default
+                       "dback_distance:10,weight:1,min_mapping_threshold:20" # default
       ),
       end = rep(" \\", length(map$paths))
     )
