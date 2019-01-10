@@ -1,4 +1,11 @@
 # lumpyR2sh
+
+## Installation
+git clone <https://github.com/IDEELResearch/lumpyR2sh.git>   
+OR  
+If you are on the longleaf server, the function is execeutable by:     
+`proj/ideel/bin/lumpyR2shpkg/lumpyR2sh`
+
 ## Purpose
 This is an execuetable R file (intended to run from the command line) that takes a directory of bams and outputs two different bash wrapper scripts (`_lumpysetup.sh` and `_lumpycall.sh`) corresponding to the [lumpy-sv](https://github.com/arq5x/lumpy-sv) pipeline. 
 
@@ -26,13 +33,13 @@ Both master bash script will expect that samtools, scripts/extractSplitReads_Bwa
 ## Example
 
 > `# step 1`  
-Rscript lumpyR2sh -A lumpysetup -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75  
+> Rscript lumpyR2sh -A lumpysetup -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75  
 >  
->bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpysetup.sh
+> bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpysetup.sh
 >  
 > `# step 2`
 >  
-Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
+> Rscript lumpyR2sh -A lumpycall -I "\<mydir/aln/\>" -O "\<mydir/lumpyout/\>" -M "{Proj\_Name}\_lumpy2Rsh\_wrapper" -R 75 
 >   
->bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
+> bash {Proj\_Name}\_lumpy2Rsh\_wrapper\_lumpycall.sh
 >
