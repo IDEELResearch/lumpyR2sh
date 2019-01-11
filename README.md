@@ -39,6 +39,9 @@ From the command line, you would run the script as follows:
 ### Details
 Both master bash script will expect that `samtools`, `extractSplitReads_BwaMem` (from `lumpy`), `pairend_distro.py` (from `lumpy`), `lumpy`, and `SVTyper` are execuetable from your environment. 
 
+### Advantages
+The advantage of using this pipeline is that the R script will read and input the correct _mean_ and _stdev_ for each individual library (important for `lumpy-sv` functionality) and needed to run this program at scale. 
+
 ## Example
 
 > `# step 1`  
